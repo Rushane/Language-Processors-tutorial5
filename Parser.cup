@@ -1,0 +1,88 @@
+import java_cup.runtime.*;
+import java.io.*;
+import java.util.*;
+
+/* Preliminaries to set up and use the scanner.  */
+parser code {:
+		Lexer lexer;
+
+		public ArithParser(Lexer l) {
+		    // As of CUP v0.11, need to pass Lexer to superclass
+		    super(l);
+		    lexer = l;
+		}
+
+		public void report_error(String message, Object info) {
+		    System.err.println(message);
+		}
+
+		public void syntax_error(Symbol cur_token) {
+		    System.err.print("Line " + lexer.getLine() +
+				     " near char " + lexer.getChar() + ": ");
+		    report_error("Syntax error", cur_token);
+		    System.err.println ("Last token read is " +
+					 lexer.getText());
+		}
+	    :};
+
+init with {:
+	  :};
+scan with {:
+		try {
+		    return lexer.next_token();
+		} catch (java.io.IOException ioe) {
+		    System.out.println("Line " + lexer.getLine() + ", pos " +
+				       lexer.getChar() +
+				       ": Unrecognised token");
+		    System.out.println(ioe.getMessage());
+		    throw ioe;
+		}
+	  :};
+
+/* Terminals (tokens returned by the scanner). */
+// keywords
+
+// special symbols
+terminal LPAREN, RPAREN;
+
+// arithmetic operators
+terminal PLUS, MINUS, MUL, DIV, MOD, EXPO;
+
+// terminals with values
+terminal Integer NUM;
+
+/* Non terminals */
+non terminal ArithProgram program;
+non terminal Exp expression;
+non terminal Exp term;
+non terminal Exp factor;
+non terminal Exp exponent;
+non terminal empty;
+
+/* Grammar rules */
+
+program ::= expression:e {: RESULT = new ArithProgram(e); :};
+
+expression ::= 	expression:e PLUS term:t {:
+			RESULT = new ExpAdd(e, t); :} |
+		expression:e MINUS term:t {:
+			RESULT = new ExpSub(e, t); :} |
+		term:t {: RESULT = t; :};
+
+term ::= term:t MUL factor:f {:
+		RESULT = new ExpMul(t, f); :} |
+	 term:t DIV factor:f {:
+		RESULT = new ExpDiv(t, f); :} |
+	 term:t MOD factor:f {:
+		RESULT = new ExpMod(t, f); :} |
+	 factor:f {: RESULT = f; :};
+
+factor ::= exponent:e EXPO factor:f {:
+		RESULT = new ExpExpt(e, f); :} |
+	 exponent:e {: RESULT = e; :};
+                       
+
+exponent ::= NUM:ilit {: RESULT = new ExpLit(ilit); :} |
+	   LPAREN expression:e RPAREN {: RESULT = e; :}	;
+
+empty ::= ;

@@ -1,0 +1,82 @@
+/* Specification for ArithExp tokens */
+
+// user customisations
+import java_cup.runtime.*;
+import java.io.IOException;
+
+// Jlex directives
+%%
+    
+%cup
+%public
+
+%class Lexer
+
+%type java_cup.runtime.Symbol
+
+%eofval{
+	return new Symbol(sym.EOF);
+%eofval}
+
+%eofclose false
+
+%char
+%line
+
+%{
+    public int getChar() {
+	return yychar + 1;
+    }
+
+    public int getColumn() {
+    	return yycolumn + 1;
+    }
+
+    public int getLine() {
+	return yyline + 1;
+    }
+
+    public String getText() {
+	return yytext();
+    }
+%}
+
+
+nl = [\n\r]
+
+cc = [\b\f]|{nl}
+
+ws = {cc}|[\t ]
+
+num = [0-9]
+
+alpha = [a-zA-Z_]
+
+alphanum = {alpha}|{num}
+
+%%
+
+<YYINITIAL>	{ws}	{/* ignore whitespace */}
+<YYINITIAL>	{nl}	{
+                        //skip newline, but reset char counter
+			yychar = 0;
+			}
+<YYINITIAL>	"+"	{return new Symbol(sym.PLUS);}
+<YYINITIAL>	"-"	{return new Symbol(sym.MINUS);}
+<YYINITIAL>	"*"	{return new Symbol(sym.MUL);}
+<YYINITIAL>	"/"	{return new Symbol(sym.DIV);}
+<YYINITIAL>	"%"	{return new Symbol(sym.MOD);}
+<YYINITIAL>	"="	{return new Symbol(sym.ASSIGN);}
+
+<YYINITIAL>	"("	{return new Symbol(sym.LPAREN);}
+<YYINITIAL>	")"	{return new Symbol(sym.RPAREN);}
+<YYINITIAL>    {num}+ {
+	       // INTEGER
+	       return new Symbol(sym.INTEGER, 
+				 new Integer(yytext()));
+	       }
+
+<YYINITIAL>    {alpha}{alphanum}* {
+	       // VARIABLE
+	       return new Symbol(sym.VARIABLE, yytext());
+	       }
