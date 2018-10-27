@@ -1,3 +1,4 @@
+import java.lang.Math;
 public class ExpExpt extends Exp {
 
   Exp exp1, exp2;
@@ -8,7 +9,9 @@ public class ExpExpt extends Exp {
   }
 
   public int eval(Environment env) throws Exception {
-    return exp1.eval(env) ^ exp2.eval(env);
+    //return exp1.eval(env) ^ exp2.eval(env);
+    return (int)Math.pow((double)exp1.eval(env),(double)exp2.eval(env));
+    
   }
 
   public String toString() {
